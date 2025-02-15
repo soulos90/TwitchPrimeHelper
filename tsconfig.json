@@ -5,7 +5,10 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@/components/*": ["./components/*"],
+      "@/constants/*": ["./constants/*"],
+      "@/theme": ["./src/theme"]
     }
   },
   "include": [

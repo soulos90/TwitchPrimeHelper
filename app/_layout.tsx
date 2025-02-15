@@ -1,15 +1,23 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { Stack, SplashScreen } from 'expo-router';
+import { View, ActivityIndicator, LogBox } from 'react-native';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import { OverlayProvider } from '../src/contexts/OverlayContext';
+import { GuidedBrowserProvider } from '../src/contexts/GuidedBrowserContext';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ThemedView } from '@/components/ThemedView';
 import 'react-native-reanimated';
+import { PrimeOverlay } from '../src/components/PrimeOverlay';
+import { ThemedText } from '@/components/ThemedText';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+LogBox.ignoreLogs(['Reanimated 2']);
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -17,23 +25,50 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
+  const [isReady, setIsReady] = useState(false);
+
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    async function prepare() {
+      try {
+        if (loaded) {
+          console.log('Assets loaded, hiding splash screen...');
+          await SplashScreen.hideAsync();
+          setIsReady(true);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
     }
+    prepare();
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  if (!loaded || !isReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator 
+          size="large" 
+          color="#9146FF"
+        />
+        <ThemedText style={{ marginTop: 10 }}>Loading...</ThemedText>
+      </View>
+    );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <GuidedBrowserProvider>
+          <OverlayProvider>
+            <ThemedView style={{ flex: 1 }}>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              </Stack>
+              <PrimeOverlay />
+            </ThemedView>
+          </OverlayProvider>
+        </GuidedBrowserProvider>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
