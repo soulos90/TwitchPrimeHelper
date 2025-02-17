@@ -1,0 +1,69 @@
+# **Twitch Prime Subscription Assistant - Design Document**
+
+## **Project Overview**
+**Purpose:**
+The Twitch Prime Subscription Assistant is a React Native mobile app designed to simplify the process of using Amazon Prime’s free Twitch subscription. The subscription must be manually renewed every 30 days, making it easy to forget. The app will guide users through the process step-by-step and provide timely reminders to ensure they use their free subscription consistently.
+
+**Why is this process cumbersome?**
+- **Manual Process:** Twitch does not provide an automatic way to renew Prime subscriptions.
+- **Multiple Steps Involved:** Users must verify their Amazon Prime link, find an eligible streamer, and navigate to the correct Twitch page each time they subscribe.
+- **UI Differences:** The Twitch interface varies slightly between iOS and Android, leading to confusion.
+- **Easily Forgotten:** Users often forget to resubscribe, missing out on their free subscription benefits.
+- **No Browser Awareness:** The app cannot track browser activity, so users must manually mark steps as completed.
+
+---
+
+## **To-Do List for Subscription Process**
+
+1. **Log in to Twitch**  
+   - Guide users to log into Twitch via an in-app browser.
+   - Provide instructions to handle login difficulties.
+   - Link: [https://www.twitch.tv/login](https://www.twitch.tv/login)
+
+2. **Check Amazon Prime Linkage to Twitch**  
+   - Verify if the user’s Twitch account is linked to Amazon Prime.
+   - Provide a walkthrough for linking Twitch and Prime if necessary.
+   - Link: [https://www.twitch.tv/prime](https://www.twitch.tv/prime)
+
+3. **Access Followed Channels List**  
+   - Display a user’s followed Twitch channels.
+   - Allow the user to select a preferred channel for Prime subscriptions.
+   - Provide a textbox for inputting a preferred channel (default: `northdeltagames`).
+   - Instructions for finding channel names manually.
+   - Link: [https://www.twitch.tv/directory/following](https://www.twitch.tv/directory/following)
+
+4. **Navigate to the Subscription Page**  
+   - Guide users to their selected channel’s subscription page.
+   - Provide iOS and Android-specific images to reduce confusion.
+   - Link: [https://www.twitch.tv/subs/{channel_name}](https://www.twitch.tv/subs/{channel_name})
+
+5. **Subscribe with Prime**  
+   - Assist users in selecting "Subscribe with Prime" and confirming the subscription.
+   - Provide troubleshooting steps for common issues (e.g., Prime not showing as an option).
+
+6. **Set Subscription Reminder (Recurring Task)**  
+   - Once a Prime subscription is used, trigger a 30-day countdown.
+   - When the countdown expires, send a push notification and add a red dot to the app icon, reminding users to resubscribe.
+   - Notification options:
+     - "Delay 1 Day" button.
+     - "Go to Preferred Page" button (opens the browser to the subscription page of the saved channel).
+
+---
+
+## **Detailed Task Breakdown**
+Each item on the To-Do list will be expanded into an individual page, including:
+- **Step-by-step instructions** with text and annotated images (iOS and Android versions).
+- **Instructions for manually confirming completion** since the app cannot track browser activity.
+- **Troubleshooting tips** for common issues users might encounter.
+- **Direct Twitch page links** for easy access.
+
+---
+
+## **Additional Description**
+**Preferred channel input:** Users will enter their preferred channel manually in a textbox, with `northdeltagames` as the default value.
+**Reminder delay option:** Users will have a "Delay 1 Day" button alongside the resubscription reminder.
+**Comprehensive onboarding:** The onboarding process should be as detailed as possible to ensure ease of use.
+**Accessibility features:** Additional features for visually impaired users should be considered, though specific requirements are unknown.
+
+---
+

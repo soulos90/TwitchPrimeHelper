@@ -1,62 +1,74 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
-import OverlayManager from '../services/OverlayManager';
-import { useOverlay } from '../contexts/OverlayContext';
-import { useGuidedBrowserFlow } from '../hooks/useGuidedBrowserFlow';
+import { TodoList, TodoItem } from '../components/TodoList';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '../types/navigation';
+
+const initialTodos: TodoItem[] = [
+  {
+    id: '1',
+    title: 'Log in to Twitch',
+    description: 'Sign in to your Twitch account to get started',
+    completed: false,
+    url: 'https://www.twitch.tv/login'
+  },
+  {
+    id: '2',
+    title: 'Link Twitch to Amazon Prime',
+    description: 'Ensure your Twitch account is linked to Amazon Prime',
+    completed: false,
+    url: 'https://www.twitch.tv/prime'
+  },
+  {
+    id: '3',
+    title: 'Use Prime Subscription',
+    description: 'Subscribe to your preferred channel using Prime',
+    completed: false,
+    url: 'https://www.twitch.tv/subs/{channel_name}'
+  },
+];
 
 export const HomeScreen = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
+  const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null);
   const colorScheme = useColorScheme();
-  const { setIsVisible } = useOverlay();
-  const { startPrimeLinkFlow } = useGuidedBrowserFlow();
-
-  const openTwitch = async () => {
-    try {
-      console.log('Starting openTwitch function');
-      setIsLoading(true);
-      await startPrimeLinkFlow();
-      console.log('Finished startPrimeLinkFlow');
-    } catch (error) {
-      console.error('Error opening Twitch:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const router = useRouter();
+  const { updateSubscriptionDate, daysUntilNextSubscription } = useSubscription();
 
   useEffect(() => {
-    console.log('Initializing overlay...');
-    const initializeOverlay = async () => {
-      const hasPermission = await OverlayManager.requestOverlayPermission();
-      if (hasPermission) {
-        console.log('Overlay permission granted, showing overlay...');
-        setIsVisible(false); // Ensure this line is uncommented to show the overlay
-      }
-    };
-    setTimeout(initializeOverlay, 1000); // Add a small delay to ensure proper initialization
-  }, []);
+    if (daysUntilNextSubscription === 0) {
+      setTodos(prevTodos => prevTodos.map(todo => 
+        todo.id === '3' ? { ...todo, completed: false } : todo
+      ));
+    }
+  }, [daysUntilNextSubscription]);
+
+  const handleTodoSelect = (todo: TodoItem) => {
+    router.push({
+      pathname: '/(tabs)/tododetail',
+      params: {
+        id: todo.id,
+        title: todo.title,
+        description: todo.description,
+        url: todo.url,
+      },
+    });
+  };   
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
       <ThemedText style={styles.title} type="title">Twitch Prime Helper</ThemedText>
-      <ThemedText type="subtitle">Manage Your Twitch Prime Subscriptions</ThemedText>
-      <Pressable 
-        style={[styles.button, { backgroundColor: '#9146FF' }]} 
-        onPress={openTwitch}
-        disabled={isLoading}>
-        {isLoading ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <ThemedText style={styles.buttonText}>Open Twitch</ThemedText>
-        )}
-      </Pressable>
-      <ThemedText style={styles.helpText}>
-        Open Twitch in your browser and sign in with your account.
+      <ThemedText style={styles.description}>
+        This app helps you manage your Twitch Prime subscriptions. Twitch Prime subscriptions must be manually renewed every 30 days, which can be cumbersome. This app guides you through the process step-by-step and provides timely reminders.
       </ThemedText>
+      <TodoList items={todos} onItemSelect={handleTodoSelect} />
     </ThemedView>
   );
 };
@@ -71,17 +83,9 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: theme.spacing.md,
   },
-  button: {
-    marginTop: theme.spacing.xl,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    minWidth: 200,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+  description: {
+    marginBottom: theme.spacing.md,
+    textAlign: 'center',
   },
   helpText: {
     marginTop: theme.spacing.md,
