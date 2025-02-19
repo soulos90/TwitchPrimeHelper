@@ -30,7 +30,7 @@ export const HomeScreen = () => {
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const colorScheme = useColorScheme();
   const router = useRouter();
-  const { daysUntilNextSubscription } = useSubscription();
+  const { daysUntilNextSubscription, tasks, markTaskComplete } = useSubscription();
 
   useEffect(() => {
     if (daysUntilNextSubscription === 0) {
@@ -38,7 +38,15 @@ export const HomeScreen = () => {
     }
   }, [daysUntilNextSubscription]);
 
-  const toggleCompletion = (id: string) => {
+  useEffect(() => {
+    setTodos(prevTodos => prevTodos.map(todo => ({
+      ...todo,
+      completed: tasks[todo.id] || false,
+    })));
+  }, [tasks]);
+
+  const toggleCompletion = async (id: string) => {
+    await markTaskComplete(id);
     setTodos(prevTodos => prevTodos.map(todo =>
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
