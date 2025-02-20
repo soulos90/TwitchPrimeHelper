@@ -4,9 +4,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { StepStamp } from '@/src/components/StepStamp';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { theme } from '@/theme';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/Colors';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import Checkbox from 'expo-checkbox';
 import { Ionicons } from '@expo/vector-icons';
@@ -70,7 +68,7 @@ export const HomeScreen = () => {
         <View style={styles.headerContainer}>
           <ThemedText style={styles.title} type="title">Twitch Prime Helper</ThemedText>
           <ThemedText style={styles.description}>
-            This app helps you manage your Twitch Prime subscription. A Prime must be manually renewed every 30 days, which can be cumbersome. This app guides you through the process step-by-step and provides timely reminders.
+            This app helps you if you have Amazon Prime and want to support a Twitch streamer. Each step below can be expanded to help walk you through completion. When you complete a step return to the app and mark it as completed.
           </ThemedText>
         </View>
         <ScrollView contentContainerStyle={styles.scrollContainer}>

@@ -9,15 +9,15 @@ import { scheduleNotification } from '../utils/NotificationHandler';
 const taskInstructions = {
   '1': {
     title: 'Log in to Twitch',
-    description: 'To mark this step as complete, log into your Twitch account.',
+    description: 'To mark this step as complete, log into your Twitch account in your browser.',
     subDescription: null,
     link: 'https://www.twitch.tv/login',
     linkLabel: 'Go to Twitch Login',
     steps: [
-      ['Open the Twitch login page.', '', require('../images/twitch_login_droid.png')],
-      ['If you do not have an account, create one.', '', require('../images/twitch_login_signup_droid.png')],
-      ['Enter your username and password.', '', ''],
-      ['Click the "Log In" button.', '', require('../images/twitch_login_complete_droid.png')],
+      ['Open the Twitch login page or press the button below.', require('../images/twitch_login_droid.png')],
+      ['If you do not have an account, create one.', require('../images/twitch_login_signup_droid.png')],
+      ['Enter your username and password.', ''],
+      ['Click the "Log In" button.', require('../images/twitch_login_complete_droid.png')],
     ],
   },
   '2': {
@@ -25,26 +25,26 @@ const taskInstructions = {
     description: 'To mark this step as complete, verify that your Twitch account is linked to Amazon Prime.',
     subDescription: null,
     link: 'https://gaming.amazon.com/links/twitch/manage',
-    linkLabel: 'Check Prime Linkage',
+    linkLabel: 'Go to Amazon Gaming Link Management',
     steps: [
-      ['Open the Amazon Gaming link management page.', '', require('../images/twitch_link_droid.png')],
-      ['Open account menu.', '', require('../images/twitch_link_menu_droid.png')],
-      ['Log In to your Amazon account.', '', require('../images/twitch_link_menu_amazon_droid.png')],
-      ['Return to the Amazon Gaming link management page.', '', require('../images/twitch_link_return_droid.png')],
-      ['Press Connect to a Twitch account.', '', require('../images/twitch_link_connect_droid.png')],
-      ['Confirm you are linking the Amazon account with Prime to the desired Twitch account.', '', require('../images/twitch_link_confirm_droid.png')],
+      ['Open the Amazon Gaming link management page or press the button below.', require('../images/twitch_link_droid.png')],
+      ['Open account menu.', require('../images/twitch_link_menu_droid.png')],
+      ['Log In to your Amazon account.', require('../images/twitch_link_menu_amazon_droid.png')],
+      ['Return to the Amazon Gaming link management page or press the button below.', require('../images/twitch_link_return_droid.png')],
+      ['Press Connect to a Twitch account.', require('../images/twitch_link_connect_droid.png')],
+      ['Confirm you are linking the Amazon account with Prime to the desired Twitch account.', require('../images/twitch_link_confirm_droid.png')],
     ],
   },
   '3': {
     title: 'Choose Preferred Channel',
     description: 'To mark this step as complete, confirm the channel in the preferred channel input is correct.',
-    subDescription: 'The default channel listed is the creator of this app, if you want to change it just replace the current channel name with the desired channel name.',
+    subDescription: 'The default channel listed is the creator of this app, To change it just replace the current channel name with the desired channel name.',
     link: 'https://www.twitch.tv/directory/following',
-    linkLabel: 'View Followed Channels',
+    linkLabel: 'Go to Followed Channels',
     steps: [
-      ['One way to find a channel name is to check the channels you are following, if you are following any.', '', ''],
-      ['You can also browse the categories of live channels.', '', ''],
-      ['You can even pick someone from the front page of twitch.', '', ''],
+      ['One way to find a channel name is to check the channels you are following, if you are following any, by pressing the button below.',''],
+      ['You can also browse the categories of live channels.',''],
+      ['You can even pick someone from the front page of twitch.', ''],
     ],
   },
   '4': {
@@ -52,13 +52,13 @@ const taskInstructions = {
     description: 'To mark this step as complete, successfully subscribe to a channel using Twitch Prime.',
     subDescription: null,
     link: 'https://www.twitch.tv/subs/{channel_name}',
-    linkLabel: 'Subscribe with Prime',
+    linkLabel: 'Go to {channel_name}\'s Subscription Page',
     steps: [
-      ['Open the subscription page for your chosen channel.', '', ''],
-      ['Scroll to bottom of the page', '', ''],
-      ['Check the "Use Prime Sub" checkbox', '', require('../images/twitch_sub_prime_droid.png')],
-      ['If there is no checkbox either there was a mistake on one of the previous tasks, or you used your prime within the last 30 days.".', '', require('../images/twitch_sub_droid.png')],
-      ['Press "Subscribe with Prime".', '', ''],
+      ['Open the subscription page for your chosen channel or press the button below.', ''],
+      ['Scroll to bottom of the page.', ''],
+      ['Check the "Use Prime Sub" checkbox.', require('../images/twitch_sub_prime_droid.png')],
+      ['If there is no checkbox either there was a mistake on one of the previous tasks, or you used your prime within the last 30 days.', require('../images/twitch_sub_droid.png')],
+      ['Press "Subscribe with Prime".', ''],
     ],
   },
 };
@@ -80,6 +80,7 @@ export const TodoDetailScreen: React.FC = () => {
   useEffect(() => {
     setButtonText(tasks[id as string] ? 'Complete' : 'Not Complete');
     setButtonColor(tasks[id as string] ? '#34C759' : '#8a1200');
+    setStepsVisible(false); // Hide instructions by default when the page is visited
   }, [tasks, id]);
 
   const handleCompleteStep = async () => {
@@ -152,17 +153,17 @@ export const TodoDetailScreen: React.FC = () => {
 
           <TouchableOpacity onPress={toggleStepsVisibility} style={styles.moreInstructionsButton}>
             <Text style={styles.moreInstructionsButtonText}>
-              {stepsVisible ? 'Hide Instructions' : 'Press to Get More Instructions'}
+              {stepsVisible ? 'Hide Instructions' : 'Press here to get more instructions'}
             </Text>
           </TouchableOpacity>
 
           {stepsVisible && task.steps.map((step, index) => (
-            <TouchableOpacity key={index} onPress={() => step[2] && handleImagePress(step[2])} style={styles.stepItem}>
+            <TouchableOpacity key={index} onPress={() => step[1] && handleImagePress(step[1])} style={styles.stepItem}>
               <View style={styles.stepNumber}>
                 <ThemedText style={styles.stepNumberText}>{index + 1}</ThemedText>
               </View>
               <ThemedText style={styles.stepText}>{step[0]}</ThemedText>
-              {step[2] && (
+              {step[1] && (
                 <View style={styles.questionMarkButton}>
                   <Text style={styles.questionMarkText}>?</Text>
                 </View>
@@ -171,20 +172,27 @@ export const TodoDetailScreen: React.FC = () => {
           ))}
 
           {id === '3' && (
-            <View style={styles.channelInputContainer}>
-              <TextInput
-                style={styles.channelInput}
-                value={channelName}
-                onChangeText={handleChannelNameChange}
-                placeholder="Enter preferred channel name"
-              />
+            <View style={styles.completeStepButton}>
+              <View style={styles.channelInputContainer}>
+                <View style={styles.channelInputLabelContainer}>
+                  <ThemedText style={styles.channelInputLabel}>Preferred</ThemedText>
+                  <ThemedText style={styles.channelInputLabel}>Channel</ThemedText>
+                </View>
+                <TextInput
+                  style={styles.channelInput}
+                  value={channelName}
+                  onChangeText={handleChannelNameChange}
+                  placeholder="Enter preferred channel name"
+                  placeholderTextColor="#888"
+                />
+              </View>
             </View>
           )}
 
           {task.link && (
-            <View style={styles.completeStepButton}>
+            <View style={styles.linkButtonBubble}>
               <TouchableOpacity onPress={() => Linking.openURL(task.link.replace('{channel_name}', channelName))} style={styles.linkButton}>
-                <Text style={styles.linkButtonText}>{task.linkLabel}</Text>
+                <Text style={styles.linkButtonText}>{task.linkLabel.replace('{channel_name}', channelName)}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -311,6 +319,15 @@ const styles = StyleSheet.create({
   channelInputContainer: {
     marginTop: 10,
     paddingHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  channelInputLabelContainer: {
+    marginRight: 10,
+  },
+  channelInputLabel: {
+    fontSize: 16,
+    color: '#fff',
   },
   channelInput: {
     height: 40,
@@ -319,6 +336,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     color: '#000',
+    backgroundColor: '#fff',
+    flex: 1,
   },
   linkButton: {
     backgroundColor: '#00750e',
@@ -355,10 +374,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     textAlign: 'center',
-    lineHeight: 15, // Proper vertical alignment
   },
   completeButtonTextContainer: {
-    alignItems: 'flex-end',
+    width: '30%',
   },
   modalOverlay: {
     flex: 1,
@@ -388,7 +406,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   moreInstructionsButton: {
-    backgroundColor: '#357ABD',
+    backgroundColor: '#00750e',
     borderRadius: 10,
     padding: 15,
     marginBottom: 5,
@@ -410,14 +428,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 10,
+    padding: 15,
     marginBottom: 5,
-    backgroundColor: '#357ABD',
+    backgroundColor: '#4A90E2',
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   completeStepButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    marginRight: 10,
+    width: '70%',
+  },
+  linkButtonBubble: {
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 5,
+    alignItems: 'center',
   },
 });
