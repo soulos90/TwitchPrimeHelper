@@ -3,15 +3,12 @@ import { useFonts } from 'expo-font';
 import { Stack, SplashScreen } from 'expo-router';
 import { View, ActivityIndicator, LogBox } from 'react-native';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
-import { GuidedBrowserProvider } from '../src/contexts/GuidedBrowserContext';
 import { SubscriptionProvider } from '../src/contexts/SubscriptionContext';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ThemedView } from '@/components/ThemedView';
 import 'react-native-reanimated';
-import { PrimeOverlay } from '../src/components/PrimeOverlay';
 import { ThemedText } from '@/components/ThemedText';
-import { TodoDetailScreen } from '../src/screens/TodoDetailScreen';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -27,7 +24,6 @@ export default function RootLayout() {
   });
 
   const [isReady, setIsReady] = useState(false);
-  const [selectedTodo, setSelectedTodo] = useState(null);
 
   useEffect(() => {
     async function prepare() {
@@ -60,18 +56,15 @@ export default function RootLayout() {
     <ErrorBoundary>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <SubscriptionProvider>
-          <GuidedBrowserProvider>
-            <ThemedView style={{ flex: 1 }}>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen 
-                  name="TodoDetailScreen" 
-                  options={{ headerShown: true, title: 'Todo Details' }}
-                />
-              </Stack>
-              <PrimeOverlay todo={selectedTodo} onClose={() => setSelectedTodo(null)} visible={!!selectedTodo} />
-            </ThemedView>
-          </GuidedBrowserProvider>
+          <ThemedView style={{ flex: 1 }}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen 
+                name="TodoDetailScreen" 
+                options={{ headerShown: false }}
+              />
+            </Stack>
+          </ThemedView>
         </SubscriptionProvider>
         <StatusBar style="auto" />
       </ThemeProvider>

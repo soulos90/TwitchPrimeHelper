@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Linking, ScrollView, Image, Platform, Modal, TouchableWithoutFeedback, ImageSourcePropType, TextInput } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, Linking, ScrollView, Image, Platform, Modal, TouchableWithoutFeedback, ImageSourcePropType, TextInput, Alert } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { scheduleNotification } from '../utils/NotificationHandler';
 
 const taskInstructions = {
   '1': {
     title: 'Log in to Twitch',
     description: 'To mark this step as complete, log into your Twitch account.',
+    subDescription: null,
     link: 'https://www.twitch.tv/login',
     linkLabel: 'Go to Twitch Login',
     steps: [
@@ -21,6 +23,7 @@ const taskInstructions = {
   '2': {
     title: 'Check Amazon Prime Linkage to Twitch',
     description: 'To mark this step as complete, verify that your Twitch account is linked to Amazon Prime.',
+    subDescription: null,
     link: 'https://gaming.amazon.com/links/twitch/manage',
     linkLabel: 'Check Prime Linkage',
     steps: [
@@ -34,7 +37,8 @@ const taskInstructions = {
   },
   '3': {
     title: 'Choose Preferred Channel',
-    description: 'To mark this step as complete, confirm the channel in the preferred channel input is correct. The default channel listed is the creator of this app, if you want to change it just replace the current channel name with the desired channel name.',
+    description: 'To mark this step as complete, confirm the channel in the preferred channel input is correct.',
+    subDescription: 'The default channel listed is the creator of this app, if you want to change it just replace the current channel name with the desired channel name.',
     link: 'https://www.twitch.tv/directory/following',
     linkLabel: 'View Followed Channels',
     steps: [
@@ -46,6 +50,7 @@ const taskInstructions = {
   '4': {
     title: 'Subscribe with Prime',
     description: 'To mark this step as complete, successfully subscribe to a channel using Twitch Prime.',
+    subDescription: null,
     link: 'https://www.twitch.tv/subs/{channel_name}',
     linkLabel: 'Subscribe with Prime',
     steps: [
@@ -62,7 +67,6 @@ export const TodoDetailScreen: React.FC = () => {
   const params = useLocalSearchParams();
   const { id } = params;
   const task = taskInstructions[id as keyof typeof taskInstructions];
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const { markTaskComplete, tasks, updatePreferredChannel, preferredChannel } = useSubscription();
   const router = useRouter();
   const [buttonText, setButtonText] = useState(tasks[id as string] ? 'Complete' : 'Not Complete');
@@ -70,6 +74,8 @@ export const TodoDetailScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalImage, setModalImage] = useState<ImageSourcePropType | null>(null);
   const [channelName, setChannelName] = useState(preferredChannel);
+  const [stepsVisible, setStepsVisible] = useState(false);
+  const completeButtonRef = useRef<View>(null);
 
   useEffect(() => {
     setButtonText(tasks[id as string] ? 'Complete' : 'Not Complete');
@@ -80,6 +86,14 @@ export const TodoDetailScreen: React.FC = () => {
     await markTaskComplete(id as string);
     setButtonText(tasks[id as string] ? 'Not Complete' : 'Complete');
     setButtonColor(tasks[id as string] ? '#8a1200' : '#34C759');
+    if (id === '4' && !tasks['4']) {
+      scheduleNotification(
+        'Twitch Prime Subscription',
+        'Your Twitch Prime subscription is now active!',
+        { taskId: '4' },
+        2592000 // 30 days
+      );
+    }
     router.back();
   };
 
@@ -105,9 +119,12 @@ export const TodoDetailScreen: React.FC = () => {
   const handleScroll = ({ nativeEvent }: { nativeEvent: any }) => {
     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
     const isScrolledToBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 10; // Adding a small margin for accuracy
-    setShowScrollIndicator(!isScrolledToBottom);
   };
-  
+
+  const toggleStepsVisibility = () => {
+    setStepsVisible(!stepsVisible);
+  };
+
   return (
     <ThemedView style={styles.outerContainer}>
       <View style={styles.innerContainer}>
@@ -116,31 +133,43 @@ export const TodoDetailScreen: React.FC = () => {
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
-          <ThemedText style={styles.description}>{task.description}</ThemedText>
         </View>
         
         <ScrollView 
           style={styles.scrollContainer} 
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          onContentSizeChange={(contentWidth, contentHeight) => {
-  setShowScrollIndicator(contentHeight > 0);
-}}
-
         >
-          {task.steps.map((step, index) => (
-            <View key={index} style={styles.stepItem}>
+          <View style={styles.descriptionContainer}>
+            <ThemedText style={styles.description}>{task.description}</ThemedText>
+          </View>
+
+          {task.subDescription && (
+            <View style={styles.descriptionContainer}>
+              <ThemedText style={styles.description}>{task.subDescription}</ThemedText>
+            </View>
+          )}
+
+          <TouchableOpacity onPress={toggleStepsVisibility} style={styles.moreInstructionsButton}>
+            <Text style={styles.moreInstructionsButtonText}>
+              {stepsVisible ? 'Hide Instructions' : 'Press to Get More Instructions'}
+            </Text>
+          </TouchableOpacity>
+
+          {stepsVisible && task.steps.map((step, index) => (
+            <TouchableOpacity key={index} onPress={() => step[2] && handleImagePress(step[2])} style={styles.stepItem}>
               <View style={styles.stepNumber}>
                 <ThemedText style={styles.stepNumberText}>{index + 1}</ThemedText>
               </View>
               <ThemedText style={styles.stepText}>{step[0]}</ThemedText>
-              {(Platform.OS === 'ios' && step[1]) || (Platform.OS === 'android' && step[2]) ? (
-                <TouchableOpacity onPress={() => handleImagePress(Platform.OS === 'ios' ? step[1] : step[2])} style={styles.questionMarkButton}>
+              {step[2] && (
+                <View style={styles.questionMarkButton}>
                   <Text style={styles.questionMarkText}>?</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
+                </View>
+              )}
+            </TouchableOpacity>
           ))}
+
           {id === '3' && (
             <View style={styles.channelInputContainer}>
               <TextInput
@@ -151,33 +180,26 @@ export const TodoDetailScreen: React.FC = () => {
               />
             </View>
           )}
-        </ScrollView>
-        {showScrollIndicator && <Text style={styles.scrollIndicator}>▼ Scroll for more steps ▼</Text>}
 
-        <View style={styles.footer}>
           {task.link && (
-            <TouchableOpacity onPress={() => Linking.openURL(task.link.replace('{channel_name}', channelName))} style={styles.linkButton}>
-              <Text style={styles.linkButtonText}>{task.linkLabel}</Text>
-            </TouchableOpacity>
+            <View style={styles.completeStepButton}>
+              <TouchableOpacity onPress={() => Linking.openURL(task.link.replace('{channel_name}', channelName))} style={styles.linkButton}>
+                <Text style={styles.linkButtonText}>{task.linkLabel}</Text>
+              </TouchableOpacity>
+            </View>
           )}
-          <TouchableOpacity 
-            onPress={handleCompleteStep} 
-            style={styles.completeButton}
-            onPressIn={() => setButtonColor(tasks[id as string] ? '#167002' : '#ff0000')}
-            onPressOut={() => setButtonColor(tasks[id as string] ? '#34C759' : '#8a1200')}
-          >
-            <Text style={[
-              styles.completeButtonText, 
-              { 
-                color: buttonColor, 
-                marginBottom: tasks[id as string] ? 0 : 10, 
-                marginLeft: tasks[id as string] ? 0 : -10 
-              }
-            ]}>
-              {buttonText}
-            </Text>
+
+          <TouchableOpacity onPress={handleCompleteStep} style={styles.completeStepButtonRow} ref={completeButtonRef}>
+            <Text style={styles.completeStepButtonText}>Press this button when you have completed this step</Text>
+            <View style={styles.completeButtonTextContainer}>
+              <Text style={[styles.completeButtonText, { color: buttonColor }]}>
+                {buttonText.split(' ').map((word, index) => (
+                  <Text key={index}>{word}{index < buttonText.split(' ').length - 1 && '\n'}</Text>
+                ))}
+              </Text>
+            </View>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
 
         <Modal
           visible={modalVisible}
@@ -207,6 +229,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: '10%',
+    paddingBottom: '5%',
   },
   innerContainer: {
     width: '90%',
@@ -214,11 +237,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 3,
     flex: 1,
-  },
-  scrollIndicator: {
-    textAlign: 'center',
-    color: '#888',
-    marginBottom: 5,
   },
   headerContainer: {
     backgroundColor: '#1E88E5',
@@ -241,6 +259,14 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+    marginBottom: 5,
+  },
+  descriptionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#357ABD',
+    borderRadius: 10,
+    padding: 15,
     marginBottom: 5,
   },
   stepItem: {
@@ -294,21 +320,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: '#000',
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#1E88E5',
-    padding: 5,
-    borderRadius: 15,
-  },
   linkButton: {
-    flex: 1,
     backgroundColor: '#00750e',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginRight: 10,
+    marginBottom: 5,
   },
   title: {
     fontSize: 24,
@@ -322,7 +339,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     color: '#fff',
-    maxWidth: '95%', // Prevents description from stretching too wide
   },
   linkButtonText: {
     color: '#FFFFFF',
@@ -335,21 +351,14 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginTop: 10,
   },
-  completeButton: {
-    width: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    height: 50,
-    borderColor: '#969696',
-  },
   completeButtonText: {
     fontWeight: 'bold',
-    fontSize: 20,
-    width: 90, // Wider than the button
+    fontSize: 16,
     textAlign: 'center',
-    lineHeight: 20, // Proper vertical alignment
-    transform: [{ rotate: '-45deg' }],
+    lineHeight: 15, // Proper vertical alignment
+  },
+  completeButtonTextContainer: {
+    alignItems: 'flex-end',
   },
   modalOverlay: {
     flex: 1,
@@ -377,5 +386,38 @@ const styles = StyleSheet.create({
   modalCloseButtonText: {
     color: '#000',
     fontSize: 24,
+  },
+  moreInstructionsButton: {
+    backgroundColor: '#357ABD',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 5,
+    alignItems: 'center',
+  },
+  moreInstructionsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  completeStepButton: {
+    backgroundColor: '#357ABD',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 5,
+    alignItems: 'center',
+  },
+  completeStepButtonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    marginBottom: 5,
+    backgroundColor: '#357ABD',
+    borderRadius: 10,
+  },
+  completeStepButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

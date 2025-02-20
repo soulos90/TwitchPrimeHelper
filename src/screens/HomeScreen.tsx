@@ -70,7 +70,7 @@ export const HomeScreen = () => {
         <View style={styles.headerContainer}>
           <ThemedText style={styles.title} type="title">Twitch Prime Helper</ThemedText>
           <ThemedText style={styles.description}>
-            This app helps you manage your Twitch Prime subscriptions. Primes must be manually renewed every 30 days, which can be cumbersome. This app guides you through the process step-by-step and provides timely reminders.
+            This app helps you manage your Twitch Prime subscription. A Prime must be manually renewed every 30 days, which can be cumbersome. This app guides you through the process step-by-step and provides timely reminders.
           </ThemedText>
         </View>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -130,7 +130,8 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     alignItems: 'center',
-    paddingBottom: 20,
+    paddingBottom: 10,
+    paddingTop: 10,
   },
   todoItem: {
     flexDirection: 'row',
@@ -141,6 +142,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     width: '100%',
     justifyContent: 'space-between',
+    minHeight: 70, // Set minimum height to accommodate two lines of text
   },
   todoTitle: {
     fontSize: 18,
