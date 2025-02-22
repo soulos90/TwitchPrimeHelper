@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSubscription } from '../contexts/SubscriptionContext';
-import { scheduleNotification } from '../utils/NotificationHandler';
+import { scheduleNotification, cancelAllNotifications } from '../utils/NotificationHandler';
 
 const taskInstructions = {
   '1': {
@@ -84,18 +84,46 @@ export const TodoDetailScreen: React.FC = () => {
   }, [tasks, id]);
 
   const handleCompleteStep = async () => {
-    await markTaskComplete(id as string);
-    setButtonText(tasks[id as string] ? 'Not Complete' : 'Complete');
-    setButtonColor(tasks[id as string] ? '#8a1200' : '#34C759');
-    if (id === '4' && !tasks['4']) {
-      scheduleNotification(
-        'Twitch Prime Subscription',
-        'Your Twitch Prime subscription is now active!',
-        { taskId: '4' },
-        2592000 // 30 days
+    if (id === '4' && tasks['4']) {
+      Alert.alert(
+        'Cancel Timer',
+        'Marking this task as not complete will cancel the timer that was set when you completed your Prime subscription. The app will not be able to accurately tell when your Prime is next available.',
+        [
+          {
+            text: 'Cancel Timer',
+            onPress: async () => {
+              await cancelAllNotifications();
+              await markTaskComplete(id as string);
+              setButtonText(tasks[id as string] ? 'Not Complete' : 'Complete');
+              setButtonColor(tasks[id as string] ? '#8a1200' : '#34C759');
+              router.back();
+            },
+          },
+          {
+            text: "Don't Change",
+            style: 'cancel',
+          },
+          {
+            text: 'Exit Without Changing',
+            onPress: () => router.back(),
+          },
+        ],
+        { cancelable: true }
       );
+    } else {
+      await markTaskComplete(id as string);
+      setButtonText(tasks[id as string] ? 'Not Complete' : 'Complete');
+      setButtonColor(tasks[id as string] ? '#8a1200' : '#34C759');
+      if (id === '4' && !tasks['4']) {
+        scheduleNotification(
+          'Twitch Prime Subscription',
+          'Your Twitch Prime subscription is now ready to use!',
+          { taskId: '4' },
+          2592000 // 30 days
+        );
+      }
+      router.back();
     }
-    router.back();
   };
 
   const handleClose = () => {
@@ -372,7 +400,7 @@ const styles = StyleSheet.create({
   },
   completeButtonText: {
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 15,
     textAlign: 'center',
   },
   completeButtonTextContainer: {

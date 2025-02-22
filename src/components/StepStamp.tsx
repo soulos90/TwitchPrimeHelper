@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderStyle: 'solid', 
   },
   stampText: {
     color: 'white',

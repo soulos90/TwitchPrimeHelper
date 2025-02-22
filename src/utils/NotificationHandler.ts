@@ -24,6 +24,10 @@ export const setupNotificationHandler = () => {
   });
 };
 
+export const cancelAllNotifications = async () => {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
 export const scheduleNotification = async (title: string, body: string, data: object, seconds: number) => {
   // Cancel any existing notifications with the same identifier
   await Notifications.cancelAllScheduledNotificationsAsync();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { StepStamp } from '@/src/components/StepStamp';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import Checkbox from 'expo-checkbox';
 import { Ionicons } from '@expo/vector-icons';
+import { scheduleNotification, cancelAllNotifications } from '../utils/NotificationHandler';
 
 interface Todo {
   id: string;
@@ -28,7 +29,7 @@ export const HomeScreen = () => {
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const colorScheme = useColorScheme();
   const router = useRouter();
-  const { daysUntilNextSubscription, tasks, markTaskComplete } = useSubscription();
+  const { daysUntilNextSubscription, tasks, markTaskComplete, updatePreferredChannel, preferredChannel } = useSubscription();
 
   useEffect(() => {
     if (daysUntilNextSubscription === 0) {
@@ -44,10 +45,42 @@ export const HomeScreen = () => {
   }, [tasks]);
 
   const toggleCompletion = async (id: string) => {
-    await markTaskComplete(id);
-    setTodos(prevTodos => prevTodos.map(todo =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+    if (id === '4' && tasks['4']) {
+      Alert.alert(
+        'Cancel Timer',
+        'Marking this task as not complete will cancel the timer that was set when you completed your Prime subscription. The app will not be able to accurately tell when your Prime is next available.',
+        [
+          {
+            text: 'Cancel Timer',
+            onPress: async () => {
+              await cancelAllNotifications();
+              await markTaskComplete(id);
+              setTodos(prevTodos => prevTodos.map(todo =>
+                todo.id === id ? { ...todo, completed: !todo.completed } : todo
+              ));
+            },
+          },
+          {
+            text: "Don't Change",
+            style: 'cancel',
+          }
+        ],
+        { cancelable: true }
+      );
+    } else {
+      await markTaskComplete(id);
+      setTodos(prevTodos => prevTodos.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      ));
+      if (id === '4' && !tasks['4']) {
+        scheduleNotification(
+          'Twitch Prime Subscription',
+          'Your Twitch Prime subscription is now ready to use!',
+          { taskId: '4' },
+          2592000 // 30 days
+        );
+      }
+    }
   };
 
   const handleTodoSelect = (todo: Todo) => {
