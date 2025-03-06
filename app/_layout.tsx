@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { ThemedView } from '@/components/ThemedView';
 import 'react-native-reanimated';
 import { ThemedText } from '@/components/ThemedText';
+import { TodoDetailScreen } from '../src/screens/TodoDetailScreen';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
